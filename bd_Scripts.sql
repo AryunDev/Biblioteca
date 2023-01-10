@@ -1,108 +1,149 @@
---/*Creando BD*/
-create database biblioteca;
---/*Marcando la BD para trabajarla*/
-use biblioteca;
---/*Creando Tablas*/
-ALTER TABLE autores
-ADD COLUMN id_libro INTEGER NOT NULL,
-ADD FOREIGN KEY (id_libro) REFERENCES libros(idlibro);
+-- MySQL Workbench Forward Engineering
 
-RENAME TABLE libro TO libros;
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+-- -----------------------------------------------------
+-- Schema biblioteca
+-- -----------------------------------------------------
 
+-- -----------------------------------------------------
+-- Schema biblioteca
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `biblioteca` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci ;
+USE `biblioteca` ;
 
-create table libros(
-idlibro int auto_increment not null primary key,
-titulo varchar(70),
-autor varchar(70),
-editorial varchar(70),
-fechaPublicacion date,
-genero varchar(70),
-cantidad int,
-estado tinyint);
-
-create table ejemplares(
-idEjemplar int auto_increment not null,
-id_libro int not null,
-estado varchar(30),
-ubicacion varchar(50) not null,
-fechaVencimiento date,
-primary key(idEjemplar),
-foreign key(id_libro) references libros(idlibro));
-
-create table usuarios(
-idUsuario int auto_increment not null,
-nombre varchar(70) not null,
-direccion varchar(70) not null,
-email varchar(25) not null,
-telefono varchar(25) not null,
-password_hash varchar(255) not null,
-salt varchar(255) not null,
-primary key(idUsuario));
-
-create table prestamos(
-idPrestamo int auto_increment not null,
-id_usuario int not null,
-id_ejemplar int not null,
-fechaPrestamo date not null,
-fechaDevolucion date not null,
-estado varchar (30) not null,
-primary key(idPrestamo),
-foreign key(id_usuario) references usuarios(idUsuario),
-foreign key(id_ejemplar) references ejemplares(idEjemplar));
-
-create table autores(
-idAutor int auto_increment,
-nombre varchar(70) NOT NULL,
-fechaNacimiento date not null,
-pais varchar(35) NOT NULL,
-genero VARCHAR(1000) NOT NULL,
-biografia TEXT NOT NULL,
-primary key(idAutor));
-
-create table editoriales(
-idEditorial int auto_increment not null,
-nombre varchar(70) not null,
-direccion varchar(70) not null,
-pais varchar(35) not null,
-id_libro int not null,
-id_autor int not null,
-primary key(idEditorial),
-foreign key (id_libro) references libros(idlibro),
-foreign key (id_autor) references autores(idAutor));
+-- -----------------------------------------------------
+-- Table `biblioteca`.`libros`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `biblioteca`.`libros` (
+  `idlibro` INT NOT NULL AUTO_INCREMENT,
+  `titulo` VARCHAR(70) NULL DEFAULT NULL,
+  `autor` VARCHAR(70) NULL DEFAULT NULL,
+  `editorial` VARCHAR(70) NULL DEFAULT NULL,
+  `fechaPublicacion` DATE NULL DEFAULT NULL,
+  `genero` VARCHAR(70) NULL DEFAULT NULL,
+  `cantidad` INT NULL DEFAULT NULL,
+  `estado` TINYINT NULL DEFAULT NULL,
+  `isbn` VARCHAR(20) NULL DEFAULT NULL,
+  PRIMARY KEY (`idlibro`),
+  UNIQUE INDEX `isbn` (`isbn` ASC) VISIBLE)
+ENGINE = InnoDB
+AUTO_INCREMENT = 2
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
 
+-- -----------------------------------------------------
+-- Table `biblioteca`.`autores`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `biblioteca`.`autores` (
+  `idAutor` INT NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(70) NOT NULL,
+  `fechaNacimiento` DATE NOT NULL,
+  `pais` VARCHAR(35) NOT NULL,
+  `genero` VARCHAR(1000) NOT NULL,
+  `biografia` TEXT NOT NULL,
+  `id_libro` INT NOT NULL,
+  PRIMARY KEY (`idAutor`),
+  INDEX `id_libro` (`id_libro` ASC) VISIBLE,
+  CONSTRAINT `autores_ibfk_1`
+    FOREIGN KEY (`id_libro`)
+    REFERENCES `biblioteca`.`libros` (`idlibro`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 2
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
 
---/*Consultas*/
-select * from libros;
+-- -----------------------------------------------------
+-- Table `biblioteca`.`editoriales`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `biblioteca`.`editoriales` (
+  `idEditorial` INT NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(70) NOT NULL,
+  `direccion` VARCHAR(70) NOT NULL,
+  `pais` VARCHAR(35) NOT NULL,
+  `id_libro` INT NOT NULL,
+  `id_autor` INT NOT NULL,
+  PRIMARY KEY (`idEditorial`),
+  INDEX `id_libro` (`id_libro` ASC) VISIBLE,
+  INDEX `id_autor` (`id_autor` ASC) VISIBLE,
+  CONSTRAINT `editoriales_ibfk_1`
+    FOREIGN KEY (`id_libro`)
+    REFERENCES `biblioteca`.`libros` (`idlibro`),
+  CONSTRAINT `editoriales_ibfk_2`
+    FOREIGN KEY (`id_autor`)
+    REFERENCES `biblioteca`.`autores` (`idAutor`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
-select autor from libro;
-select autor,titulo from libro;
+
+-- -----------------------------------------------------
+-- Table `biblioteca`.`ejemplares`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `biblioteca`.`ejemplares` (
+  `idEjemplar` INT NOT NULL AUTO_INCREMENT,
+  `id_libro` INT NOT NULL,
+  `estado` VARCHAR(30) NULL DEFAULT NULL,
+  `ubicacion` VARCHAR(50) NOT NULL,
+  `fechaVencimiento` DATE NULL DEFAULT NULL,
+  PRIMARY KEY (`idEjemplar`),
+  INDEX `id_libro` (`id_libro` ASC) VISIBLE,
+  CONSTRAINT `ejemplares_ibfk_1`
+    FOREIGN KEY (`id_libro`)
+    REFERENCES `biblioteca`.`libros` (`idlibro`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
 
---/*CRUD*/
---/*Insertar libros*/
-insert into libros(titulo,autor,editorial,fechaPublicacion,genero,cantidad,estado) 
-values('El principito', 'Antoine de Saint-Exupéry', 'Éditions Gallimard', '1943-04-06', 'Narrativa', 8, 1);
+-- -----------------------------------------------------
+-- Table `biblioteca`.`usuarios`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `biblioteca`.`usuarios` (
+  `idUsuario` INT NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(70) NOT NULL,
+  `direccion` VARCHAR(70) NOT NULL,
+  `email` VARCHAR(25) NOT NULL,
+  `telefono` VARCHAR(25) NOT NULL,
+  `password_hash` VARCHAR(255) NOT NULL,
+  `salt` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`idUsuario`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
---/*Insertar otros...*/
 
---/*Actualizar*/
+-- -----------------------------------------------------
+-- Table `biblioteca`.`prestamos`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `biblioteca`.`prestamos` (
+  `idPrestamo` INT NOT NULL AUTO_INCREMENT,
+  `id_usuario` INT NOT NULL,
+  `id_ejemplar` INT NOT NULL,
+  `fechaPrestamo` DATE NOT NULL,
+  `fechaDevolucion` DATE NOT NULL,
+  `estado` VARCHAR(30) NOT NULL,
+  PRIMARY KEY (`idPrestamo`),
+  INDEX `id_usuario` (`id_usuario` ASC) VISIBLE,
+  INDEX `id_ejemplar` (`id_ejemplar` ASC) VISIBLE,
+  CONSTRAINT `prestamos_ibfk_1`
+    FOREIGN KEY (`id_usuario`)
+    REFERENCES `biblioteca`.`usuarios` (`idUsuario`),
+  CONSTRAINT `prestamos_ibfk_2`
+    FOREIGN KEY (`id_ejemplar`)
+    REFERENCES `biblioteca`.`ejemplares` (`idEjemplar`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
 
-
-update libro 
-set titulo = 'lenguaje' 
-where idlibro=1;
-
-update libro 
-set titulo = 'dias pasados', autor = 'Miguel' 
-where idlibro = 1;
-
-update libro 
-set estado =0, titulo='amigos' 
-where idlibro=1;
-
---/*Eliminar*/
-delete from libro where idlibro = 3;
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
